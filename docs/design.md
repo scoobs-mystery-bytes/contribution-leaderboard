@@ -35,7 +35,7 @@ Posting private repository activity to Discord shares that activity with the des
 
 ## Step 2: configure the workflow
 
-Copy `examples/leaderboard.yml` into the consuming repository's `.github/workflows/` directory. Choose a released tag or existing commit SHA; the example's `v1` reference becomes usable after release. The workflow grants read access to contents, issues, and pull requests. No repository write permission is required.
+Copy `examples/leaderboard.yml` into the consuming repository's `.github/workflows/` directory. It pins a specific action commit; choose a reviewed release commit SHA for production and update it deliberately when upgrading. The workflow grants read access to contents, issues, and pull requests. No repository write permission is required.
 
 The workflow runs once daily at 08:17 UTC, away from the start of the hour. Its default inputs are `cadence: weekly` and `period: previous`. The daily cron triggers the action; `cadence` filters those scheduled runs, so changing it without an appropriate workflow trigger does not schedule additional runs. The posting hour is UTC and does not follow local daylight saving time. A concurrency group prevents simultaneous executions of this workflow. It does not deduplicate sequential reruns. A 15-minute timeout bounds the job.
 
@@ -155,7 +155,7 @@ Maintain repository activity as appropriate, monitor workflow failures, and insp
 4. Exercise a scheduled boundary-day run. Ensure quiet repositories understand GitHub's inactivity restriction.
 5. Commit and push the reviewed setup. Create an initial release and `v1` reference. Consumers can pin the release's full commit SHA.
 6. Publish the action to GitHub Marketplace through the repository's release flow. A Marketplace listing does not require turning this action into a GitHub App.
-7. For subsequent releases, rerun checks, rebuild the bundle, publish versioned releases, and update the major-version reference intentionally.
+7. Update the example workflow's pinned SHA to a reviewed release commit after publishing. For subsequent releases, rerun checks, rebuild the bundle, publish versioned releases, and update the major-version reference and example pin intentionally.
 
 ## Later enhancements
 

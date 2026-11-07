@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: scoobs-mystery-bytes/contribution-leaderboard@v1
+      - uses: scoobs-mystery-bytes/contribution-leaderboard@4f3ca1bf926da4244547721fa645db8e7015d36c
         with:
           discord-webhook-url: ${{ secrets.CONTRIBUTION_LEADERBOARD_DISCORD_WEBHOOK_URL }}
           cadence: weekly

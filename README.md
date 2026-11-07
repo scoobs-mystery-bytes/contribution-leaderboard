@@ -35,7 +35,7 @@ See [the step-by-step design](docs/design.md) for the full behavior and limitati
 1. Create a webhook for the destination Discord channel under **Edit Channel → Integrations → Webhooks**.
 2. In your GitHub repository, create an Actions secret named `CONTRIBUTION_LEADERBOARD_DISCORD_WEBHOOK_URL` containing that URL.
 3. Copy [examples/leaderboard.yml](examples/leaderboard.yml) to `.github/workflows/leaderboard.yml` in your repository.
-4. The example references `scoobs-mystery-bytes/contribution-leaderboard@v1`. For production, pin the action to a reviewed full commit SHA from a release.
+4. The example pins a specific commit from this repository. For production, choose a reviewed release and pin the action to that release's full commit SHA. Update the pin deliberately when upgrading.
 5. Set `cadence`, `period`, and any other inputs below. Commit the workflow to the default branch.
 6. Run the workflow manually with **dry-run enabled** and inspect the job summary.
 7. Run manually with dry-run disabled to post, or let the schedule run.
