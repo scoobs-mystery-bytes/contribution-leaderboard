@@ -1,0 +1,23 @@
+README.md
+  s_325c1e7858160f::t_39500e695dba0f 38
+docs/design.md
+  s_325c1e7858160f::t_39500e695dba0f 38,158
+examples/leaderboard.yml
+  s_325c1e7858160f::t_39500e695dba0f 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "61576365dc3098180f4e4728c49caa3a342b58bd",
+  "prompts": {},
+  "sessions": {
+    "s_325c1e7858160f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1b1db-f6e9-7713-8a00-27d39f10fbc6",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "scoobs-mystery-bytes <15992407+scoobs-mystery-bytes@users.noreply.github.com>"
+    }
+  }
+}
