@@ -2,7 +2,7 @@
   <img src="assets/images/contribution-leaderboard-wordmark.png" alt="Contribution Leaderboard" width="720">
 </p>
 
-# Description
+# Contribution Leaderboard
 
 Ever wanted to give your contributors a little extra kudos? 🎉 Contribution Leaderboard shines a light on the people helping your project grow, with scheduled shout-outs delivered straight to Discord. Celebrate the merged PRs, helpful issue reports, and contributions that keep things moving!
 
@@ -128,7 +128,7 @@ Scores are recalculated from GitHub at each run; there is no stored total. Repor
 
 Issue creation and manual completion are separate milestones. If Alice opens an issue and Bob's merged PR automatically closes it, Alice earns 1 point and Bob earns 3 for the PR; there is no additional issue completion reward. If a human manually completes an issue without a PR or commit causing the closure, that closer earns 1 point. Someone who both opens and manually completes an issue earns 2 points. Each milestone counts in the period when it happens. To recognize issue creation only, set `issue-weight: '0'`.
 
-The action checks the latest closure event's source, rather than treating any linked or mentioned PR as the cause. PR and commit closures receive no completion credit, even if the PR is outside the reporting period or repository. A matching closure event with no PR or commit source is treated as manual. Missing or stale closure records receive no completion credit. Human completion credit uses GitHub's `closed_by` account. Bot closures and issues closed as not planned receive no completion points, even with `include-bots: 'true'`. That input still controls bot inclusion for PR and issue creation rewards. Pull requests are excluded from issue counts, even though GitHub's issues API returns them too.
+The action checks the latest closure event's source, rather than treating any linked or mentioned PR as the cause. PR and commit closures receive no completion credit, even if the PR is outside the reporting period or repository. A matching closure event with no PR or commit source is treated as manual. Missing or stale closure records receive no completion credit. Human completion credit goes to the actor recorded on that closure event. Bot closures and issues closed as not planned receive no completion points, even with `include-bots: 'true'`. That input still controls bot inclusion for PR and issue creation rewards. Pull requests are excluded from issue counts, even though GitHub's issues API returns them too.
 
 ```yaml
 with:

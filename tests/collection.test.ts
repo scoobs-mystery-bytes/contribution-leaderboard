@@ -4,11 +4,12 @@ import { getOctokit } from '@actions/github';
 import { collect, rank } from '../src/leaderboard.js';
 import { getPeriod } from '../src/period.js';
 
-function closureResponse(closedAt: string, closer: { __typename: string } | null = null) {
-  return { data: { repository: { issue: {
+function closureResponse(closedAt: string, closer: { __typename: string } | null = null, login = 'maintainer') {
+  const issue = {
     state: 'CLOSED', stateReason: 'COMPLETED', closedAt,
-    timelineItems: { nodes: [{ createdAt: closedAt, closer }] },
-  } } } };
+    timelineItems: { nodes: [{ createdAt: closedAt, closer, actor: { login, __typename: 'User' } }] },
+  };
+  return { data: { repository: { i1: issue, i2: issue } } };
 }
 
 test('collection paginates and filters event dates, issue reasons, and PRs returned as issues', async () => {
@@ -20,10 +21,7 @@ test('collection paginates and filters event dates, issue reasons, and PRs retur
       paths.push(target.pathname + target.search);
       const headers: Record<string, string> = { 'content-type': 'application/json' };
       if (target.pathname.endsWith('/graphql')) {
-        return new Response(JSON.stringify(closureResponse('2026-10-26T00:00:00Z')), { headers });
-      }
-      if (target.pathname.endsWith('/issues/1')) {
-        return new Response(JSON.stringify({ state: 'closed', state_reason: 'completed', closed_at: '2026-10-26T00:00:00Z', closed_by: { login: 'closer', type: 'User' } }), { headers });
+        return new Response(JSON.stringify(closureResponse('2026-10-26T00:00:00Z', null, 'closer')), { headers });
       }
       if (target.pathname.endsWith('/pulls')) {
         if (target.searchParams.get('page') === '2') {
@@ -39,7 +37,7 @@ test('collection paginates and filters event dates, issue reasons, and PRs retur
           { user: null, merged_at: '2026-10-30T00:00:00Z', updated_at: '2026-10-30T00:00:00Z' },
         ]), { headers });
       }
-      assert.equal(target.searchParams.get('since'), '2026-10-26T00:00:00.000Z');
+      assert.equal(target.searchParams.get('since'), '2026-10-25T23:59:59.000Z');
       assert.equal(target.searchParams.get('state'), 'all');
       return new Response(JSON.stringify([
         { number: 1, user, created_at: '2026-10-25T00:00:00Z', state: 'closed', closed_at: '2026-10-26T00:00:00Z', state_reason: 'completed' },
@@ -55,7 +53,7 @@ test('collection paginates and filters event dates, issue reasons, and PRs retur
     { login: 'alice', type: 'User', metric: 'pullRequests' },
     { login: 'closer', type: 'User', metric: 'issues' },
   ]);
-  assert.equal(paths.length, 5);
+  assert.equal(paths.length, 4);
 });
 
 test('manual closer credit survives a missing author and skips unknown, stale and bot closures', async () => {
@@ -72,7 +70,12 @@ test('manual closer credit survives a missing author and skips unknown, stale an
     request: { fetch: async (url: string | URL | Request) => {
       const path = new URL(String(url)).pathname;
       if (path.endsWith('/graphql')) {
-        return new Response(JSON.stringify(closureResponse(base.closed_at)), { headers: { 'content-type': 'application/json' } });
+        const repository = Object.fromEntries(details.map((detail, index) => [`i${index + 1}`, {
+          state: detail.state.toUpperCase(), stateReason: detail.state_reason.toUpperCase(), closedAt: detail.closed_at,
+          timelineItems: { nodes: [{ createdAt: base.closed_at, closer: null,
+            actor: detail.closed_by ? { login: detail.closed_by.login, __typename: detail.closed_by.type } : null }] },
+        }]));
+        return new Response(JSON.stringify({ data: { repository } }), { headers: { 'content-type': 'application/json' } });
       }
       const match = path.match(/\/issues\/(\d+)$/);
       const data = path.endsWith('/pulls') ? [] : match
@@ -130,7 +133,7 @@ test('issue creation counts open, reopened and closed issues across pages, witho
   });
   const period = getPeriod(new Date('2026-11-02T08:17:00Z'), 'weekly');
   assert.deepEqual((await collect('test-token', 'owner/repo', period, client)).map(item => item.metric), [
-    'issuesCreated', 'issuesCreated', 'issuesCreated', 'issues', 'issuesCreated',
+    'issuesCreated', 'issuesCreated', 'issuesCreated', 'issuesCreated', 'issues',
   ]);
 });
 
@@ -138,12 +141,20 @@ test('PR and commit closures earn no extra completion points; verified manual cl
   const closedAt = '2026-10-30T00:00:00Z';
   const manual = closureResponse(closedAt);
   const missingEvent = closureResponse(closedAt);
-  missingEvent.data.repository.issue.timelineItems.nodes = [];
+  missingEvent.data.repository.i1.timelineItems.nodes = [];
   const stale = closureResponse('2026-10-29T00:00:00Z');
+  const equivalentTimestamp = closureResponse('2026-10-30T00:00:00.000Z');
+  const slightlyDelayedEvent = closureResponse(closedAt);
+  slightlyDelayedEvent.data.repository.i1.timelineItems.nodes[0]!.createdAt = '2026-10-30T00:00:01Z';
+  const tooDelayedEvent = closureResponse(closedAt);
+  tooDelayedEvent.data.repository.i1.timelineItems.nodes[0]!.createdAt = '2026-10-30T00:00:06Z';
   const cases = [
     { name: 'closing PR', response: closureResponse(closedAt, { __typename: 'PullRequest' }), completion: false },
     { name: 'closing commit', response: closureResponse(closedAt, { __typename: 'Commit' }), completion: false },
     { name: 'manual closure', response: manual, completion: true },
+    { name: 'equivalent timestamp formatting', response: equivalentTimestamp, completion: true },
+    { name: 'closure event one second after closed_at', response: slightlyDelayedEvent, completion: true },
+    { name: 'closure event beyond tolerance', response: tooDelayedEvent, completion: false },
     { name: 'missing closure event', response: missingEvent, completion: false },
     { name: 'stale closure event', response: stale, completion: false },
   ];
@@ -171,4 +182,78 @@ test('PR and commit closures earn no extra completion points; verified manual cl
       assert.equal(entries.reduce((total, entry) => total + entry.score, 0), scenario.completion ? 5 : 4);
     });
   }
+});
+
+test('batches closure metadata for many issues and does not fetch individual issue details', async () => {
+  const closedAt = '2026-10-30T00:00:00Z';
+  const calls: number[] = [];
+  const issues = Array.from({ length: 60 }, (_, index) => ({
+    number: index + 1, user: null, created_at: '2026-10-01T00:00:00Z',
+    state: 'closed', state_reason: 'completed', closed_at: closedAt,
+  }));
+  const client = getOctokit('test-token', {
+    request: { fetch: async (url: string | URL | Request, init?: RequestInit) => {
+      const path = new URL(String(url)).pathname;
+      const headers = { 'content-type': 'application/json' };
+      if (path.endsWith('/pulls')) return new Response('[]', { headers });
+      if (path.endsWith('/graphql')) {
+        const query = JSON.parse(String(init?.body)).query as string;
+        const numbers = [...query.matchAll(/i(\d+): issue\(number: \d+\)/g)].map(match => Number(match[1]));
+        calls.push(numbers.length);
+        const repository = Object.fromEntries(numbers.map(number => [`i${number}`, {
+          state: 'CLOSED', stateReason: 'COMPLETED', closedAt,
+          timelineItems: { nodes: [{ createdAt: closedAt, closer: null, actor: { login: 'closer', __typename: 'User' } }] },
+        }]));
+        return new Response(JSON.stringify({ data: { repository } }), { headers });
+      }
+      assert.equal(path, '/repos/owner/repo/issues');
+      return new Response(JSON.stringify(issues), { headers });
+    } },
+  });
+  const contributions = await collect('test-token', 'owner/repo', getPeriod(new Date('2026-11-02T08:17:00Z'), 'weekly'), client);
+  assert.equal(contributions.length, 60);
+  assert.ok(contributions.every(item => item.login === 'closer' && item.metric === 'issues'));
+  assert.deepEqual(calls, [25, 25, 10]);
+});
+
+test('includes issues updated exactly at period start with GitHub strict since filtering', async () => {
+  const start = '2026-10-26T00:00:00Z';
+  const user = { login: 'creator', type: 'User' };
+  const records = [
+    { number: 1, user, created_at: start, updated_at: start, state: 'open', closed_at: null },
+    { number: 2, user, created_at: '2026-10-25T00:00:00Z', updated_at: start, state: 'closed', state_reason: 'completed', closed_at: start },
+    { number: 3, user, created_at: '2026-10-25T23:59:59Z', updated_at: '2026-10-25T23:59:59Z', state: 'open', closed_at: null },
+    { number: 4, user, created_at: '2026-11-02T00:00:00Z', updated_at: '2026-11-02T00:00:00Z', state: 'open', closed_at: null },
+  ];
+  const client = getOctokit('test-token', {
+    request: { fetch: async (url: string | URL | Request) => {
+      const target = new URL(String(url));
+      const headers = { 'content-type': 'application/json' };
+      if (target.pathname.endsWith('/pulls')) return new Response('[]', { headers });
+      if (target.pathname.endsWith('/graphql')) return new Response(JSON.stringify(closureResponse(start, null, 'closer')), { headers });
+      const since = Date.parse(target.searchParams.get('since')!);
+      return new Response(JSON.stringify(records.filter(record => Date.parse(record.updated_at) > since)), { headers });
+    } },
+  });
+  const period = getPeriod(new Date('2026-11-02T08:17:00Z'), 'weekly');
+  assert.deepEqual(await collect('test-token', 'owner/repo', period, client), [
+    { login: 'creator', type: 'User', metric: 'issuesCreated' },
+    { login: 'closer', type: 'User', metric: 'issues' },
+  ]);
+});
+
+test('all-time collection requests issues without a since cutoff', async () => {
+  let checked = false;
+  const client = getOctokit('test-token', {
+    request: { fetch: async (url: string | URL | Request) => {
+      const target = new URL(String(url));
+      if (target.pathname.endsWith('/issues')) {
+        checked = true;
+        assert.equal(target.searchParams.has('since'), false);
+      }
+      return new Response('[]', { headers: { 'content-type': 'application/json' } });
+    } },
+  });
+  await collect('test-token', 'owner/repo', { start: new Date(0), end: new Date('2026-11-02T08:17:00Z'), due: true }, client);
+  assert.equal(checked, true);
 });

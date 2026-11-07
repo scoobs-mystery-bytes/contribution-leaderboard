@@ -22,33 +22,44 @@ export interface RankingOptions {
 }
 
 interface ClosureResponse {
-  repository: {
-    issue: {
+  repository: Record<string, {
       closedAt: string | null;
       state: string;
       stateReason: string | null;
-      timelineItems: { nodes: ({ createdAt: string; closer: { __typename: string } | null } | null)[] };
-    } | null;
-  } | null;
+      timelineItems: { nodes: ({
+        createdAt: string;
+        closer: { __typename: string } | null;
+        actor: { login: string; __typename: string } | null;
+      } | null)[] | null };
+    } | null> | null;
 }
 
-async function wasManuallyCompleted(client: ReturnType<typeof getOctokit>, owner: string, repo: string, number: number, closedAt: string): Promise<boolean> {
-  const result = await client.graphql<ClosureResponse>(`
-    query ClosureSource($owner: String!, $repo: String!, $number: Int!) {
-      repository(owner: $owner, name: $repo) {
-        issue(number: $number) {
-          state stateReason closedAt
-          timelineItems(last: 1, itemTypes: [CLOSED_EVENT]) {
-            nodes { ... on ClosedEvent { createdAt closer { __typename } } }
-          }
-        }
+async function collectClosures(client: ReturnType<typeof getOctokit>, owner: string, repo: string, candidates: { number: number; closedAt: string }[]): Promise<Contribution[]> {
+  const contributions: Contribution[] = [];
+  for (let offset = 0; offset < candidates.length; offset += 25) {
+    const batch = candidates.slice(offset, offset + 25);
+    const selections = batch.map(({ number }) => {
+      if (!Number.isSafeInteger(number) || number < 1) throw new Error('Invalid issue number returned by GitHub.');
+      return `i${number}: issue(number: ${number}) { state stateReason closedAt timelineItems(last: 1, itemTypes: [CLOSED_EVENT]) { nodes { ... on ClosedEvent { createdAt closer { __typename } actor { login __typename } } } } }`;
+    }).join('\n');
+    const result = await client.graphql<ClosureResponse>(`
+      query ClosureSources($owner: String!, $repo: String!) {
+        repository(owner: $owner, name: $repo) { ${selections} }
+      }
+    `, { owner, repo });
+    for (const candidate of batch) {
+      const issue = result.repository?.[`i${candidate.number}`];
+      const event = issue?.timelineItems.nodes?.[0];
+      const actor = event?.actor;
+      if (issue?.state === 'CLOSED' && issue.stateReason === 'COMPLETED'
+        && issue.closedAt && Date.parse(issue.closedAt) === Date.parse(candidate.closedAt)
+        && event && Math.abs(Date.parse(event.createdAt) - Date.parse(candidate.closedAt)) <= 5000
+        && event.closer === null && actor?.__typename === 'User' && !actor.login.toLowerCase().endsWith('[bot]')) {
+        contributions.push({ login: actor.login, type: 'User', metric: 'issues' });
       }
     }
-  `, { owner, repo, number });
-  const issue = result.repository?.issue;
-  const event = issue?.timelineItems.nodes[0];
-  return issue?.state === 'CLOSED' && issue.stateReason === 'COMPLETED'
-    && issue.closedAt === closedAt && event?.createdAt === closedAt && event.closer === null;
+  }
+  return contributions;
 }
 
 export function rank(contributions: Contribution[], options: RankingOptions): Entry[] {
@@ -81,22 +92,19 @@ export async function collect(token: string, repository: string, period: Period,
     if (response.data.some(pr => Date.parse(pr.updated_at) < period.start.getTime())) break;
   }
   for await (const response of client.paginate.iterator(client.rest.issues.listForRepo, {
-    owner, repo, state: 'all', since: period.start.toISOString(), per_page: 100,
+    owner, repo, state: 'all', since: period.start.getTime() <= 0 ? undefined : new Date(period.start.getTime() - 1000).toISOString(), per_page: 100,
   })) {
+    const candidates: { number: number; closedAt: string }[] = [];
     for (const issue of response.data) {
       if (issue.pull_request) continue;
       if (issue.user && inPeriod(issue.created_at, period)) {
         contributions.push({ login: issue.user.login, type: issue.user.type, metric: 'issuesCreated' });
       }
-      if (issue.state === 'closed' && issue.state_reason === 'completed' && inPeriod(issue.closed_at, period)) {
-        const { data: detail } = await client.rest.issues.get({ owner, repo, issue_number: issue.number });
-        if (detail.state === 'closed' && detail.state_reason === 'completed' && detail.closed_at && inPeriod(detail.closed_at, period)
-          && detail.closed_by?.type === 'User' && !detail.closed_by.login.toLowerCase().endsWith('[bot]')
-          && await wasManuallyCompleted(client, owner, repo, issue.number, detail.closed_at)) {
-          contributions.push({ login: detail.closed_by.login, type: detail.closed_by.type, metric: 'issues' });
-        }
+      if (issue.state === 'closed' && issue.state_reason === 'completed' && issue.closed_at && inPeriod(issue.closed_at, period)) {
+        candidates.push({ number: issue.number, closedAt: issue.closed_at });
       }
     }
+    contributions.push(...await collectClosures(client, owner, repo, candidates));
   }
   return contributions;
 }

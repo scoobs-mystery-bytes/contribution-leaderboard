@@ -18,9 +18,9 @@ async function execute(event: string, dryRun: boolean, period = 'previous') {
       number: 1, user: { login: 'reporter', type: 'User' },
       created_at: '2026-10-29T00:00:00Z', state: 'closed', closed_at: '2026-10-30T00:00:00Z', state_reason: 'completed',
     };
-    const data = request.url === '/graphql' ? { data: { repository: { issue: {
+    const data = request.url === '/graphql' ? { data: { repository: { i1: {
       state: 'CLOSED', stateReason: 'COMPLETED', closedAt: issue.closed_at,
-      timelineItems: { nodes: [{ createdAt: issue.closed_at, closer: null }] },
+      timelineItems: { nodes: [{ createdAt: issue.closed_at, closer: null, actor: { login: 'closer', __typename: 'User' } }] },
     } } } } : request.url === '/repos/owner/repo/issues/1'
       ? { ...issue, closed_by: { login: 'closer', type: 'User' } }
       : request.url?.startsWith('/repos/owner/repo/pulls') ? [{

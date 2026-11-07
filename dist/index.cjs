@@ -24643,22 +24643,29 @@ function inPeriod(timestamp, period) {
 }
 
 // src/leaderboard.ts
-async function wasManuallyCompleted(client, owner, repo, number, closedAt) {
-  const result = await client.graphql(`
-    query ClosureSource($owner: String!, $repo: String!, $number: Int!) {
-      repository(owner: $owner, name: $repo) {
-        issue(number: $number) {
-          state stateReason closedAt
-          timelineItems(last: 1, itemTypes: [CLOSED_EVENT]) {
-            nodes { ... on ClosedEvent { createdAt closer { __typename } } }
-          }
-        }
+async function collectClosures(client, owner, repo, candidates) {
+  const contributions = [];
+  for (let offset = 0; offset < candidates.length; offset += 25) {
+    const batch = candidates.slice(offset, offset + 25);
+    const selections = batch.map(({ number }) => {
+      if (!Number.isSafeInteger(number) || number < 1) throw new Error("Invalid issue number returned by GitHub.");
+      return `i${number}: issue(number: ${number}) { state stateReason closedAt timelineItems(last: 1, itemTypes: [CLOSED_EVENT]) { nodes { ... on ClosedEvent { createdAt closer { __typename } actor { login __typename } } } } }`;
+    }).join("\n");
+    const result = await client.graphql(`
+      query ClosureSources($owner: String!, $repo: String!) {
+        repository(owner: $owner, name: $repo) { ${selections} }
+      }
+    `, { owner, repo });
+    for (const candidate of batch) {
+      const issue2 = result.repository?.[`i${candidate.number}`];
+      const event = issue2?.timelineItems.nodes?.[0];
+      const actor = event?.actor;
+      if (issue2?.state === "CLOSED" && issue2.stateReason === "COMPLETED" && issue2.closedAt && Date.parse(issue2.closedAt) === Date.parse(candidate.closedAt) && event && Math.abs(Date.parse(event.createdAt) - Date.parse(candidate.closedAt)) <= 5e3 && event.closer === null && actor?.__typename === "User" && !actor.login.toLowerCase().endsWith("[bot]")) {
+        contributions.push({ login: actor.login, type: "User", metric: "issues" });
       }
     }
-  `, { owner, repo, number });
-  const issue2 = result.repository?.issue;
-  const event = issue2?.timelineItems.nodes[0];
-  return issue2?.state === "CLOSED" && issue2.stateReason === "COMPLETED" && issue2.closedAt === closedAt && event?.createdAt === closedAt && event.closer === null;
+  }
+  return contributions;
 }
 function rank(contributions, options) {
   const entries = /* @__PURE__ */ new Map();
@@ -24696,21 +24703,20 @@ async function collect(token, repository, period, client = getOctokit(token)) {
     owner,
     repo,
     state: "all",
-    since: period.start.toISOString(),
+    since: period.start.getTime() <= 0 ? void 0 : new Date(period.start.getTime() - 1e3).toISOString(),
     per_page: 100
   })) {
+    const candidates = [];
     for (const issue2 of response.data) {
       if (issue2.pull_request) continue;
       if (issue2.user && inPeriod(issue2.created_at, period)) {
         contributions.push({ login: issue2.user.login, type: issue2.user.type, metric: "issuesCreated" });
       }
-      if (issue2.state === "closed" && issue2.state_reason === "completed" && inPeriod(issue2.closed_at, period)) {
-        const { data: detail } = await client.rest.issues.get({ owner, repo, issue_number: issue2.number });
-        if (detail.state === "closed" && detail.state_reason === "completed" && detail.closed_at && inPeriod(detail.closed_at, period) && detail.closed_by?.type === "User" && !detail.closed_by.login.toLowerCase().endsWith("[bot]") && await wasManuallyCompleted(client, owner, repo, issue2.number, detail.closed_at)) {
-          contributions.push({ login: detail.closed_by.login, type: detail.closed_by.type, metric: "issues" });
-        }
+      if (issue2.state === "closed" && issue2.state_reason === "completed" && issue2.closed_at && inPeriod(issue2.closed_at, period)) {
+        candidates.push({ number: issue2.number, closedAt: issue2.closed_at });
       }
     }
+    contributions.push(...await collectClosures(client, owner, repo, candidates));
   }
   return contributions;
 }

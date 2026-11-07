@@ -66,5 +66,10 @@ test('delivery errors do not expose webhook tokens or retry uncertain delivery',
     throw new Error(webhook);
   }), error => error instanceof Error && !error.message.includes('secret-token'));
   assert.equal(calls, 1);
-  await assert.rejects(postMessage(webhook, message, icon, async () => new Response('{}', { status: 403 })), /HTTP 403/);
+  calls = 0;
+  await assert.rejects(postMessage(webhook, message, icon, async () => {
+    calls++;
+    return new Response('{}', { status: 403 });
+  }), /HTTP 403/);
+  assert.equal(calls, 1);
 });
