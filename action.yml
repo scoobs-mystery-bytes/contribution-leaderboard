@@ -1,0 +1,69 @@
+name: Contribution Leaderboard
+description: Give your contributors some kudos! Celebrate their help with scheduled GitHub leaderboard shout-outs in Discord.
+branding:
+  icon: award
+  color: purple
+inputs:
+  github-token:
+    description: GitHub token with read access to the target repository's issues and pull requests.
+    required: false
+    default: ${{ github.token }}
+  discord-webhook-url:
+    description: Discord channel webhook URL. Required unless dry-run is true.
+    required: false
+  repository:
+    description: Repository to rank, in owner/repo format.
+    default: ${{ github.repository }}
+  cadence:
+    description: Posting cadence (daily, weekly, monthly, quarterly, or custom).
+    default: weekly
+  period:
+    description: Score window (previous, day-to-date, week-to-date, weeks-to-date, month-to-date, or all-time).
+    default: previous
+  interval-weeks:
+    description: Number of weeks per score window when period is weeks-to-date (1-520).
+    default: '3'
+  anchor-week:
+    description: Monday UTC used to align weeks-to-date resets, in YYYY-MM-DD format.
+    default: '2026-01-05'
+  interval-months:
+    description: Number of months between custom cadence boundaries (1-120).
+    default: '2'
+  anchor-month:
+    description: First boundary month for custom periods, in YYYY-MM format.
+    default: '2026-01'
+  top:
+    description: Maximum number of contributors to display (1-25).
+    default: '10'
+  pr-weight:
+    description: Points awarded to the author of a merged pull request (0-1000).
+    default: '3'
+  issue-weight:
+    description: Points for a human manually completing an issue; PR and commit closures earn no extra points (0-1000).
+    default: '1'
+  issue-created-weight:
+    description: Points awarded to an issue author when the issue is opened, regardless of its current state (0-1000).
+    default: '1'
+  exclude-users:
+    description: Comma-separated GitHub logins to exclude, case insensitive.
+    default: ''
+  include-bots:
+    description: Include bot accounts in the ranking.
+    default: 'false'
+  dry-run:
+    description: Generate the leaderboard and workflow summary without posting to Discord.
+    default: 'false'
+outputs:
+  period-start:
+    description: Inclusive reporting period start, in UTC ISO 8601.
+  period-end:
+    description: Exclusive reporting period end, in UTC ISO 8601.
+  leaderboard:
+    description: JSON array containing all ranked contributors.
+  posted:
+    description: Whether a Discord message was posted (true or false).
+  skipped:
+    description: Whether this scheduled run fell outside a reporting boundary.
+runs:
+  using: node24
+  main: dist/index.cjs
