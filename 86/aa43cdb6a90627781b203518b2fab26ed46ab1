@@ -1,0 +1,82 @@
+.gitignore
+  s_325c1e7858160f::t_fc669242a7b285 1-5
+action.yml
+  s_325c1e7858160f::t_fe988c831d4a0f 42
+  s_325c1e7858160f::t_cb52de4fe60de7 18,20,22,30
+  s_325c1e7858160f::t_0e0eaf2f15265e 21,23-28
+  s_325c1e7858160f::t_fc669242a7b285 1,3-17,19,29,31-41,43,47-69
+  s_325c1e7858160f::t_ec6a568b6ee773 44-46
+  s_325c1e7858160f::t_dd05eafd40f125 2
+package.json
+  s_325c1e7858160f::t_01be6238037b0a 5
+  s_325c1e7858160f::t_fc669242a7b285 1-4,7,11-13,16-17,20-27
+  s_325c1e7858160f::t_dd05eafd40f125 6
+  s_325c1e7858160f::t_8a8aecb487f793 14
+  s_325c1e7858160f::t_0e6942072fd49b 15
+  s_325c1e7858160f::t_5d568a1f4557bb 8-10,18-19
+src/period.ts
+  s_325c1e7858160f::t_fc669242a7b285 1,3-6,8-35,66-72
+  s_325c1e7858160f::t_0e0eaf2f15265e 2,38,41-60,65
+  s_325c1e7858160f::t_cb52de4fe60de7 7,36-37,39-40,61-64
+.gitattributes
+  s_325c1e7858160f::t_fc669242a7b285 1
+src/index.ts
+  s_325c1e7858160f::t_0e0eaf2f15265e 29-32
+  s_325c1e7858160f::t_cb52de4fe60de7 3
+  s_325c1e7858160f::t_8a8aecb487f793 61
+  s_325c1e7858160f::t_8ed825ee390417 6-7,62
+  s_325c1e7858160f::t_fe988c831d4a0f 56
+  s_325c1e7858160f::t_ec6a568b6ee773 36,40,57
+  s_325c1e7858160f::t_fc669242a7b285 1-2,4-5,8-25,27-28,33-35,37-39,41-55,58-60,63-68
+  s_325c1e7858160f::t_85b15aca3d5541 26
+tests/period.test.ts
+  s_325c1e7858160f::t_0e0eaf2f15265e 84-116
+  s_325c1e7858160f::t_cb52de4fe60de7 1-83
+tsconfig.json
+  s_325c1e7858160f::t_fc669242a7b285 1-12,14
+  s_325c1e7858160f::t_8a8aecb487f793 13
+tests/action.test.ts
+  s_325c1e7858160f::t_cb52de4fe60de7 1-66,68-114,124-125
+  s_325c1e7858160f::t_0e0eaf2f15265e 67,115-123
+src/leaderboard.ts
+  s_325c1e7858160f::t_fc669242a7b285 1-6,8-12,14-18,20-23,54-58,61,63-69,71-83,85-86,98-102
+  s_325c1e7858160f::t_0630faae197c14 87-88,92,96-97
+  s_325c1e7858160f::t_612a0900b4f48c 70
+  s_325c1e7858160f::t_ec6a568b6ee773 7,13,19,59-60,62,84,89-91
+  s_325c1e7858160f::t_fe988c831d4a0f 93,95
+  s_325c1e7858160f::t_8e121de34adf04 24-53,94
+src/discord.ts
+  s_325c1e7858160f::t_411231eb61cb52 28
+  s_325c1e7858160f::t_85b15aca3d5541 8-10,13-15
+  s_325c1e7858160f::t_cb52de4fe60de7 5-7,26
+  s_325c1e7858160f::t_8ed825ee390417 18,21,43,48-50,54
+  s_325c1e7858160f::t_fc669242a7b285 1-4,16-17,19-20,22-25,27,29-42,44-47,51-53,55-70
+  s_325c1e7858160f::t_f1a387fe30d16b 11-12
+tests/discord.test.ts
+  s_325c1e7858160f::t_cb52de4fe60de7 4,17-24
+  s_325c1e7858160f::t_8a8aecb487f793 1-3,5-16,25-70
+dist/index.cjs
+  s_325c1e7858160f::t_a2b6d50a34522a 1-24883
+package-lock.json
+  s_325c1e7858160f::t_69947ba141bcf4 1-1326
+tests/collection.test.ts
+  s_325c1e7858160f::t_9726252ba96325 1-174
+tests/leaderboard.test.ts
+  s_325c1e7858160f::t_a4df19b0d85fe8 1-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "86aa43cdb6a90627781b203518b2fab26ed46ab1",
+  "prompts": {},
+  "sessions": {
+    "s_325c1e7858160f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1b1db-f6e9-7713-8a00-27d39f10fbc6",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "scoobs-mystery-bytes <15992407+scoobs-mystery-bytes@users.noreply.github.com>"
+    }
+  }
+}
