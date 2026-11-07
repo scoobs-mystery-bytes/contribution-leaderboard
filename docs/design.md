@@ -157,8 +157,6 @@ Maintain repository activity as appropriate, monitor workflow failures, and insp
 6. Publish the action to GitHub Marketplace through the repository's release flow. A Marketplace listing does not require turning this action into a GitHub App.
 7. For subsequent releases, rerun checks, rebuild the bundle, publish versioned releases, and update the major-version reference intentionally.
 
-No remote repository changes, releases, Marketplace listing, secrets, or live Discord messages are part of the initial local setup.
-
 ## Later enhancements
 
 - Local timezones, custom weekdays, and custom month days.

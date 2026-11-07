@@ -1,6 +1,6 @@
 # Changelog
 
-Notable changes to Contribution Leaderboard will be recorded here. This project has not yet published a release.
+Notable changes to Contribution Leaderboard are recorded here.
 
 ## Unreleased
 
