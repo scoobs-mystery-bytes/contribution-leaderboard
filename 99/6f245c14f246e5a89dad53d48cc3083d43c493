@@ -1,0 +1,27 @@
+examples/leaderboard.yml
+  s_325c1e7858160f::t_045d9b5e9a5a3b 25
+  s_325c1e7858160f::t_612a0900b4f48c 23
+  s_325c1e7858160f::t_85b15aca3d5541 1-22,24,26,28
+  s_325c1e7858160f::t_921dcb3f3f8fcf 27
+.github/workflows/ci.yml
+  s_325c1e7858160f::t_85b15aca3d5541 1-19
+examples/live-test.yml
+  s_325c1e7858160f::t_921dcb3f3f8fcf 23
+  s_325c1e7858160f::t_01be6238037b0a 1-22,24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "996f245c14f246e5a89dad53d48cc3083d43c493",
+  "prompts": {},
+  "sessions": {
+    "s_325c1e7858160f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1b1db-f6e9-7713-8a00-27d39f10fbc6",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "scoobs-mystery-bytes <15992407+scoobs-mystery-bytes@users.noreply.github.com>"
+    }
+  }
+}
