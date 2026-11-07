@@ -1,0 +1,28 @@
+name: Contribution Leaderboard
+on:
+  schedule:
+    - cron: '17 8 * * *'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Preview without posting to Discord
+        type: boolean
+        default: true
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+concurrency:
+  group: contribution-leaderboard
+  cancel-in-progress: false
+jobs:
+  leaderboard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: scoobs-mystery-bytes/contribution-leaderboard@v1
+        with:
+          discord-webhook-url: ${{ secrets.CONTRIBUTION_LEADERBOARD_DISCORD_WEBHOOK_URL }}
+          cadence: weekly
+          period: previous
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || false }}

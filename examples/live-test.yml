@@ -1,0 +1,24 @@
+name: Contribution Leaderboard Live Test
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Preview without posting to Discord
+        type: boolean
+        default: true
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+jobs:
+  live-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          discord-webhook-url: ${{ secrets.CONTRIBUTION_LEADERBOARD_DISCORD_WEBHOOK_URL }}
+          cadence: weekly
+          period: previous
+          dry-run: ${{ inputs.dry-run }}
