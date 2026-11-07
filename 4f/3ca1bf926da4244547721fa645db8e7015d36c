@@ -1,0 +1,42 @@
+tests/action.test.ts
+  s_325c1e7858160f::t_8103d820485975 21,23
+.github/workflows/ci.yml
+  s_325c1e7858160f::t_5d524de79125d7 11-12
+docs/design.md
+  s_325c1e7858160f::t_561ee40a2726a8 77,81,89
+  s_325c1e7858160f::t_23083c3e733412 79
+tests/collection.test.ts
+  s_325c1e7858160f::t_2ee0c28dc66cbf 146,155,186-242
+  s_325c1e7858160f::t_8e97dbfe897d64 243-259
+  s_325c1e7858160f::t_23083c3e733412 147-150,156-157
+  s_325c1e7858160f::t_8103d820485975 7-8,10-12,24,40,56,73-78,136,144
+README.md
+  s_325c1e7858160f::t_561ee40a2726a8 131
+  s_325c1e7858160f::t_2402e85c1b757e 5
+tests/discord.test.ts
+  s_325c1e7858160f::t_2402e85c1b757e 69-74
+examples/live-test.yml
+  s_325c1e7858160f::t_5d524de79125d7 18
+src/leaderboard.ts
+  s_325c1e7858160f::t_4fd10271f1f7e0 33,52,55,95
+  s_325c1e7858160f::t_23083c3e733412 56
+  s_325c1e7858160f::t_26646439d9357c 25,29-32,34,37-51,53-54,57-58,61-62,97,103-104,107
+dist/index.cjs
+  s_325c1e7858160f::t_8d0fee27f8db00 24646-24664,24667-24668,24706,24709,24715-24716,24719
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4f3ca1bf926da4244547721fa645db8e7015d36c",
+  "prompts": {},
+  "sessions": {
+    "s_325c1e7858160f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1b1db-f6e9-7713-8a00-27d39f10fbc6",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "scoobs-mystery-bytes <15992407+scoobs-mystery-bytes@users.noreply.github.com>"
+    }
+  }
+}
